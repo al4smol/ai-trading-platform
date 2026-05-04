@@ -10,14 +10,26 @@ from app.fast_move import detect_fast_move
 from app.signal_engine import generate_signal
 
 
-def run(symbol: str, mock: bool) -> str:
+def run(symbol: str, mock: bool) -> dict[str, object] | None:
     provider = DataProvider(mock=mock)
     candles = provider.get_candles(symbol=symbol, limit=20)
     event = detect_fast_move(symbol=symbol, candles=candles)
     signal = generate_signal(event=event, candles=candles)
-    result = evaluate_signal(signal)
-    print(f"Output: {result}")
-    return result
+    if signal:
+        evaluation = evaluate_signal(signal)
+        print("Evaluation:", evaluation)
+
+        if evaluation["decision"] == "REJECT":
+            print("Signal rejected")
+            signal = None
+        else:
+            print("Signal accepted")
+
+        print(f"Output: {evaluation}")
+        return evaluation
+
+    print("No signal → skip evaluation")
+    return None
 
 
 def _parse_bool(raw: str) -> bool:
