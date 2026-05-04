@@ -26,23 +26,17 @@ def _safe_get(candle: list[Any] | tuple[Any, ...], index: int) -> float | None:
         return None
 
 
-def add_signal_metrics(signal: dict[str, Any], candles: list[list[Any] | tuple[Any, ...]]) -> dict[str, Any]:
-    """Add extra metrics into ``signal['metrics']`` using OHLCV candle data.
-
-    Added fields:
-    - momentum: bool | None
-    - volume_trend: bool | None
-    - candle_strength: float | None
-    - volatility: float | None
-
-    Edge cases:
-    - insufficient data -> None for corresponding metric
-    - fewer than 5 candles -> volatility is None
-    """
+def add_signal_metrics(
+    signal: dict[str, Any],
+    candles: list[list[Any] | tuple[Any, ...]],
+    event: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Add extra metrics into ``signal['metrics']`` using OHLCV candle data."""
     signal.setdefault("metrics", {})
 
     momentum: bool | None = None
     volume_trend: bool | None = None
+    follow_through = False
     candle_strength: float | None = None
     volatility: float | None = None
 
@@ -53,6 +47,20 @@ def add_signal_metrics(signal: dict[str, Any], candles: list[list[Any] | tuple[A
         c3 = _safe_get(candles[-3], OHLCV_CLOSE)
         if c1 is not None and c2 is not None and c3 is not None:
             momentum = c1 > c2 > c3
+
+        closes = [
+            _safe_get(candles[-3], OHLCV_CLOSE),
+            _safe_get(candles[-2], OHLCV_CLOSE),
+            _safe_get(candles[-1], OHLCV_CLOSE),
+        ]
+        if None not in closes:
+            direction = event.get("direction") if event else None
+            if direction == "UP":
+                follow_through = closes[0] < closes[1] < closes[2]
+            elif direction == "DOWN":
+                follow_through = closes[0] > closes[1] > closes[2]
+            else:
+                follow_through = False
 
     # volume_trend: volume[-1] > volume[-2]
     if len(candles) >= 2:
@@ -91,6 +99,7 @@ def add_signal_metrics(signal: dict[str, Any], candles: list[list[Any] | tuple[A
 
     signal["metrics"]["momentum"] = momentum
     signal["metrics"]["volume_trend"] = volume_trend
+    signal["metrics"]["follow_through"] = follow_through
     signal["metrics"]["candle_strength"] = candle_strength
     signal["metrics"]["volatility"] = volatility
 
@@ -98,6 +107,7 @@ def add_signal_metrics(signal: dict[str, Any], candles: list[list[Any] | tuple[A
         "Signal metrics: "
         f"momentum={momentum}, "
         f"volume_trend={volume_trend}, "
+        f"follow_through={follow_through}, "
         f"candle_strength={candle_strength}, "
         f"volatility={volatility}"
     )

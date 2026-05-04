@@ -27,6 +27,6 @@ def generate_signal(event: dict[str, Any] | None, candles: list[list[Any]] | Non
         "reason": event.get("type"),
         "metrics": {},
     }
-    signal = add_signal_metrics(signal, candles)
+    signal = add_signal_metrics(signal, candles, event)
     print(f"Signal: generated {signal}")
     return signal
