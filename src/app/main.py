@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 import argparse
+import os
 from typing import Any
+
+from dotenv import load_dotenv
 
 from app.ai_evaluator import evaluate_with_ai
 from app.data_provider import DataProvider
@@ -12,8 +15,16 @@ from app.execution import build_trade
 from app.fast_move import detect_fast_move
 from app.signal_engine import generate_signal
 
+load_dotenv()
 
-def run(symbol: str, mock: bool) -> dict[str, Any] | None:
+
+def run(symbol: str, mock: bool = True, use_mock: bool | None = None) -> dict[str, Any] | None:
+    if use_mock is not None:
+        mock = use_mock
+
+    print(f"DATA SOURCE: {'MOCK' if mock else 'REAL'}")
+    print(f"API KEY LOADED: {bool(os.getenv('OPENAI_API_KEY'))}")
+
     provider = DataProvider(mock=mock)
     candles = provider.get_candles(symbol=symbol, limit=20)
     event = detect_fast_move(symbol=symbol, candles=candles)
