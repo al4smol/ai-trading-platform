@@ -13,6 +13,7 @@ from app.data_provider import DataProvider
 from app.evaluator import evaluate_signal
 from app.execution import build_trade
 from app.fast_move import detect_fast_move
+from app.market_regime import detect_market_regime
 from app.signal_engine import generate_signal
 
 if importlib.util.find_spec("dotenv") is not None:
@@ -29,6 +30,13 @@ def run(symbol: str, mock: bool = True, use_mock: bool | None = None) -> dict[st
 
     provider = DataProvider(mock=mock)
     candles = provider.get_candles(symbol=symbol)
+    regime = detect_market_regime(candles)
+    print("MARKET REGIME:", regime)
+
+    if regime != "TREND":
+        print("Regime is not TREND → skip signal generation")
+        return None
+
     event = detect_fast_move(symbol=symbol, candles=candles)
     signal = generate_signal(event=event, candles=candles)
 
