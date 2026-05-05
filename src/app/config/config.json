@@ -1,0 +1,34 @@
+{
+  "default_exchange": "binance",
+  "exchanges": {
+    "binance": {
+      "apiKey": "",
+      "secret": "",
+      "enableRateLimit": true
+    },
+    "kucoin": {
+      "apiKey": "",
+      "secret": "",
+      "password": ""
+    },
+    "mexc": {
+      "apiKey": "",
+      "secret": ""
+    }
+  },
+  "strategy": {
+    "fast_move_threshold": 0.1,
+    "timeframe": "1m",
+    "candle_limit": 50,
+    "min_volatility": 0.5,
+    "min_candle_strength": 0.3
+  },
+  "range_strategy": {
+    "range_window": 20,
+    "entry_zone_low": 0.25,
+    "entry_zone_high": 0.75,
+    "breakout_buffer": 0.002,
+    "min_volatility": 0.2,
+    "min_candle_strength": 0.2
+  }
+}
