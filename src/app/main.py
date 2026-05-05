@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 from typing import Any
 
+from app.ai_evaluator import evaluate_with_ai
 from app.data_provider import DataProvider
 from app.evaluator import evaluate_signal
 from app.execution import build_trade
@@ -25,6 +26,13 @@ def run(symbol: str, mock: bool) -> dict[str, Any] | None:
         if isinstance(evaluation, dict) and evaluation.get("decision") == "REJECT":
             print("Signal rejected")
             return evaluation
+
+        ai_evaluation = evaluate_with_ai(signal)
+        print("AI Evaluation:", ai_evaluation)
+
+        if ai_evaluation.get("decision") == "REJECT":
+            print("AI rejected signal")
+            return ai_evaluation
 
         trade = build_trade(signal, candles)
         print("TRADE:", trade)
