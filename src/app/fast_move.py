@@ -4,8 +4,14 @@ from __future__ import annotations
 
 from typing import Any
 
+from app.config.config_loader import load_config
 
-def detect_fast_move(symbol: str, candles: list[list[Any]] | None, threshold_pct: float = 0.5) -> dict[str, Any] | None:
+
+def detect_fast_move(symbol: str, candles: list[list[Any]] | None) -> dict[str, Any] | None:
+    config = load_config()
+    threshold = config["strategy"]["fast_move_threshold"]
+    print("CONFIG FAST_MOVE_THRESHOLD:", threshold)
+
     if candles is None:
         print(f"Event: no candles for {symbol}")
         return None
@@ -23,7 +29,7 @@ def detect_fast_move(symbol: str, candles: list[list[Any]] | None, threshold_pct
         return None
 
     move_pct = ((max_price - min_price) / min_price) * 100
-    if move_pct < threshold_pct:
+    if move_pct < threshold:
         print(f"Event: no fast move for {symbol} ({move_pct:.2f}%)")
         return None
 

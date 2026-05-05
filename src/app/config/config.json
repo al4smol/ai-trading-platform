@@ -15,5 +15,12 @@
       "apiKey": "",
       "secret": ""
     }
+  },
+  "strategy": {
+    "fast_move_threshold": 0.1,
+    "timeframe": "1m",
+    "candle_limit": 50,
+    "min_volatility": 0.5,
+    "min_candle_strength": 0.3
   }
 }

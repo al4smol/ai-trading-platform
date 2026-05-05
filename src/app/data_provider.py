@@ -7,6 +7,7 @@ import random
 from dataclasses import dataclass, field
 from typing import Any
 
+from app.config.config_loader import get_strategy_config
 from app.services.market_data.ccxt_provider import CcxtProvider
 
 
@@ -17,25 +18,29 @@ class DataProvider:
     mock: bool = True
     ccxt_provider: CcxtProvider = field(default_factory=CcxtProvider)
 
-    def get_candles(self, symbol: str, limit: int = 20) -> list[list[Any]]:
+    def get_candles(self, symbol: str, limit: int | None = None) -> list[list[Any]]:
         if not symbol:
             raise ValueError("symbol must be non-empty")
-        if limit <= 0:
+
+        strategy_config = get_strategy_config()
+        candles_limit = limit if limit is not None else strategy_config["candle_limit"]
+
+        if candles_limit <= 0:
             return []
 
         if not self.mock:
             print("TRYING REAL DATA")
-            candles = self.ccxt_provider.fetch_ohlcv(symbol, limit=limit)
+            candles = self.ccxt_provider.fetch_ohlcv(symbol, limit=candles_limit)
             if not candles:
                 print("DataProvider: fallback to mock")
-                candles = self._generate_mock(symbol, limit=limit)
+                candles = self._generate_mock(symbol, limit=candles_limit)
                 print("DATA SOURCE:", "MOCK")
             else:
                 print("DATA SOURCE:", "REAL")
             print("LAST PRICE:", candles[-1]["close"])
             return self._normalize_for_pipeline(candles)
 
-        candles = self._generate_mock(symbol, limit=limit)
+        candles = self._generate_mock(symbol, limit=candles_limit)
         print("DATA SOURCE:", "MOCK")
         print("LAST PRICE:", candles[-1]["close"])
         return self._normalize_for_pipeline(candles)

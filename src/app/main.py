@@ -26,7 +26,7 @@ def run(symbol: str, mock: bool = True, use_mock: bool | None = None) -> dict[st
     print(f"API KEY LOADED: {bool(os.getenv('OPENAI_API_KEY'))}")
 
     provider = DataProvider(mock=mock)
-    candles = provider.get_candles(symbol=symbol, limit=20)
+    candles = provider.get_candles(symbol=symbol)
     event = detect_fast_move(symbol=symbol, candles=candles)
     signal = generate_signal(event=event, candles=candles)
 

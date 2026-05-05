@@ -24,3 +24,9 @@ def load_config() -> dict[str, Any]:
         raise Exception(f"failed_to_load_config: {config_path}") from e
 
     return _CONFIG_CACHE
+
+
+def get_strategy_config() -> dict[str, Any]:
+    """Return strategy-specific config section."""
+    config = load_config()
+    return config["strategy"]

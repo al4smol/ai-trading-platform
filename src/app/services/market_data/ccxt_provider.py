@@ -34,7 +34,11 @@ class CcxtProvider:
         exchange = exchange_class(params)
         return exchange_name, exchange
 
-    def fetch_ohlcv(self, symbol: str, timeframe: str = "1m", limit: int = 50) -> list[dict[str, Any]]:
+    def fetch_ohlcv(self, symbol: str, timeframe: str | None = None, limit: int | None = None) -> list[dict[str, Any]]:
+        strategy_cfg = self.config.get("strategy", {})
+        fetch_timeframe = timeframe if timeframe is not None else strategy_cfg.get("timeframe", "1m")
+        fetch_limit = limit if limit is not None else strategy_cfg.get("candle_limit", 50)
+
         try:
             exchange_name, exchange = self._build_exchange()
             print(">>> CCXT FETCH START")
@@ -43,7 +47,7 @@ class CcxtProvider:
 
             for attempt in range(1, 4):
                 try:
-                    raw = exchange.fetch_ohlcv(symbol, timeframe=timeframe, limit=limit)
+                    raw = exchange.fetch_ohlcv(symbol, timeframe=fetch_timeframe, limit=fetch_limit)
                     return [
                         {
                             "timestamp": row[0],
