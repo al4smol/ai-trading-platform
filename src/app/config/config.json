@@ -1,0 +1,19 @@
+{
+  "default_exchange": "binance",
+  "exchanges": {
+    "binance": {
+      "apiKey": "",
+      "secret": "",
+      "enableRateLimit": true
+    },
+    "kucoin": {
+      "apiKey": "",
+      "secret": "",
+      "password": ""
+    },
+    "mexc": {
+      "apiKey": "",
+      "secret": ""
+    }
+  }
+}

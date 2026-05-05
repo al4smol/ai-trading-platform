@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import os
 import random
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
+
+from app.services.market_data.ccxt_provider import CcxtProvider
 
 
 @dataclass
@@ -13,6 +15,7 @@ class DataProvider:
     """Simple mockable OHLCV data provider."""
 
     mock: bool = True
+    ccxt_provider: CcxtProvider = field(default_factory=CcxtProvider)
 
     def get_candles(self, symbol: str, limit: int = 20) -> list[list[Any]]:
         if not symbol:
@@ -20,14 +23,41 @@ class DataProvider:
         if limit <= 0:
             return []
 
-        if self.mock:
-            candles = self._generate_mock_ohlcv(limit=limit)
-            print(f"DataProvider: generated {len(candles)} mock candles for {symbol}")
-            return candles
+        if not self.mock:
+            print("TRYING REAL DATA")
+            candles = self.ccxt_provider.fetch_ohlcv(symbol, limit=limit)
+            if not candles:
+                print("DataProvider: fallback to mock")
+                candles = self._generate_mock(symbol, limit=limit)
+                print("DATA SOURCE:", "MOCK")
+            else:
+                print("DATA SOURCE:", "REAL")
+            print("LAST PRICE:", candles[-1]["close"])
+            return self._normalize_for_pipeline(candles)
 
-        # Placeholder for real provider integration
-        print(f"DataProvider: no live provider configured for {symbol}")
-        return []
+        candles = self._generate_mock(symbol, limit=limit)
+        print("DATA SOURCE:", "MOCK")
+        print("LAST PRICE:", candles[-1]["close"])
+        return self._normalize_for_pipeline(candles)
+
+    def _generate_mock(self, symbol: str, limit: int) -> list[dict[str, Any]]:
+        candles = self._generate_mock_ohlcv(limit=limit)
+        normalized = [
+            {
+                "timestamp": row[0],
+                "open": row[1],
+                "high": row[2],
+                "low": row[3],
+                "close": row[4],
+                "volume": row[5],
+            }
+            for row in candles
+        ]
+        print(f"DataProvider: generated {len(normalized)} mock candles for {symbol}")
+        return normalized
+
+    def _normalize_for_pipeline(self, candles: list[dict[str, Any]]) -> list[list[Any]]:
+        return [[c["timestamp"], c["open"], c["high"], c["low"], c["close"], c["volume"]] for c in candles]
 
     def _generate_mock_ohlcv(self, limit: int) -> list[list[Any]]:
         mode = os.getenv("MOCK_MARKET_MODE", "mixed").strip().lower()
