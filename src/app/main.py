@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import argparse
+import importlib
+import importlib.util
 import os
 from typing import Any
-
-from dotenv import load_dotenv
 
 from app.ai_evaluator import evaluate_with_ai
 from app.data_provider import DataProvider
@@ -15,7 +15,9 @@ from app.execution import build_trade
 from app.fast_move import detect_fast_move
 from app.signal_engine import generate_signal
 
-load_dotenv()
+if importlib.util.find_spec("dotenv") is not None:
+    load_dotenv = importlib.import_module("dotenv").load_dotenv
+    load_dotenv()
 
 
 def run(symbol: str, mock: bool = True, use_mock: bool | None = None) -> dict[str, Any] | None:

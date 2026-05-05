@@ -1,7 +1,10 @@
 import time
 
+from app.services.market_data.ccxt_provider import CcxtProvider
 from app.evaluator import reject_stats
 from app.main import run
+
+print("IMPORT TEST OK")
 
 
 duration_minutes = 30

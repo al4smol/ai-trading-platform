@@ -3,13 +3,17 @@
 from __future__ import annotations
 
 import json
+import importlib
+import importlib.util
 import os
 from typing import Any
 
-from dotenv import load_dotenv
-from openai import OpenAI
+OPENAI_AVAILABLE = importlib.util.find_spec("openai") is not None
+OpenAI = importlib.import_module("openai").OpenAI if OPENAI_AVAILABLE else None
 
-load_dotenv()
+if importlib.util.find_spec("dotenv") is not None:
+    load_dotenv = importlib.import_module("dotenv").load_dotenv
+    load_dotenv()
 
 
 FALLBACK_RESPONSE = {
@@ -24,6 +28,8 @@ def evaluate_with_ai(signal: dict[str, Any] | None) -> dict[str, Any]:
         api_key = os.getenv("OPENAI_API_KEY")
         if not api_key:
             raise Exception("missing_api_key")
+        if not OPENAI_AVAILABLE or OpenAI is None:
+            raise Exception("openai_not_installed")
 
         client = OpenAI(api_key=api_key)
         prompt = (

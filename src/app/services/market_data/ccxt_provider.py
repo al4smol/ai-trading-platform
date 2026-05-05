@@ -2,31 +2,27 @@
 
 from __future__ import annotations
 
-import importlib.util
 import time
-from pathlib import Path
+import importlib
+import importlib.util
 from typing import Any
 
-import ccxt
+from app.config.config_loader import load_config
 
 
-def _load_config() -> dict[str, Any]:
-    loader_path = Path(__file__).resolve().parents[2] / "config" / "config_loader.py"
-    spec = importlib.util.spec_from_file_location("app_config_loader", loader_path)
-    if spec is None or spec.loader is None:
-        raise Exception(f"failed_to_load_config_loader: {loader_path}")
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module.load_config()
+CCXT_AVAILABLE = importlib.util.find_spec("ccxt") is not None
+ccxt = importlib.import_module("ccxt") if CCXT_AVAILABLE else None
 
 
 class CcxtProvider:
     """Fetch OHLCV data from configurable ccxt exchange."""
 
     def __init__(self) -> None:
-        self.config = _load_config()
+        self.config = load_config()
 
     def _build_exchange(self) -> tuple[str, Any]:
+        if not CCXT_AVAILABLE or ccxt is None:
+            raise RuntimeError("ccxt_not_installed")
         exchange_name = self.config.get("default_exchange", "binance")
         exchanges_cfg = self.config.get("exchanges", {})
         params = exchanges_cfg.get(exchange_name, {})
